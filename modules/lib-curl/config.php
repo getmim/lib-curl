@@ -7,7 +7,7 @@
 
 return [
     '__name' => 'lib-curl',
-    '__version' => '0.0.1',
+    '__version' => '0.0.2',
     '__git' => 'git@github.com:getphun/lib-curl.git',
     '__license' => 'MIT',
     '__author' => [
@@ -46,6 +46,10 @@ return [
             'LibCurl\\Library' => [
                 'type' => 'file',
                 'base' => 'modules/lib-curl/library'
+            ],
+            'LibCurl\\Server' => [
+                'type' => 'file',
+                'base' => 'modules/lib-curl/server'
             ]
         ]
     ],
