@@ -37,7 +37,13 @@ $opts = [
     // tambahan request query string
     'query' => [
         'key' => 'value'
-    ]
+    ],
+
+    // custom referer
+    'referer' => 'https://wwww.google.com/',
+
+    // custom user agent
+    'agent' => 'Mim 0.0.1'
 ];
 
 $result = Curl::fetch($opts);

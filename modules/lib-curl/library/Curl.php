@@ -51,10 +51,13 @@ class Curl
 
 	static function fetch(array $opts){
         $def_opts = [
-            'body' => [],
-            'headers' => [],
-            'method' => 'GET',
-            'query' => []
+            'body'      => [],
+            'headers'   => [],
+            'method'    => 'GET',
+            'query'     => [],
+            'agent'     => null,
+            'timeout'   => 10,
+            'referer'   => null
         ];
 
         foreach($def_opts as $key => $def)
@@ -75,10 +78,19 @@ class Curl
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_AUTOREFERER, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $opts['method']);
         curl_setopt($ch, CURLOPT_ENCODING, '');
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $opts['timeout']);
+
+        // user agent
+        if($opts['agent'])
+            curl_setopt($ch, CURLOPT_USERAGENT, $opts['agent']);
+
+        // referer
+        if($opts['referer'])
+            curl_setopt($ch, CURLOPT_REFERER, $opts['referer']);
+        else
+            curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 
         // skip ssl verification
         if(strstr($opts['url'], 'https://')){
