@@ -43,7 +43,10 @@ $opts = [
     'referer' => 'https://wwww.google.com/',
 
     // custom user agent
-    'agent' => 'Mim 0.0.1'
+    'agent' => 'Mim 0.0.1',
+
+    // custom timeout. default 10 detik
+    'timeout' => 5
 ];
 
 $result = Curl::fetch($opts);
@@ -61,6 +64,9 @@ Nilai dari parameter `$opts` adalah:
 1. `body`. Konten yang dikirim bersamaan dengan request curl. Nilai ini bisa array key-value pair, atau
 string, atau binary.
 1. `query`. Query string yang akan ditambahkan ke request url.
+1. `referer` Custom header `Referer: `.
+1. `agent` Custom header `User-Agent:`.
+1. `timeout` Set maksimal eksekusi curl. Default 10 detik.
 
 ### get(string $url, array $headers): mixed
 
