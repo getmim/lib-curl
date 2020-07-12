@@ -57,7 +57,8 @@ class Curl
             'query'     => [],
             'agent'     => null,
             'timeout'   => 10,
-            'referer'   => null
+            'referer'   => null,
+            'download'  => null
         ];
 
         foreach($def_opts as $key => $def)
@@ -121,6 +122,12 @@ class Curl
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
 
+        // download file
+        if($opts['download']){
+            $f = fopen($opts['download'], 'w+');
+            curl_setopt($ch, CURLOPT_FILE, $f);
+        }
+
         $res = curl_exec($ch);
         $ch_info = curl_getinfo($ch);
 
@@ -135,31 +142,43 @@ class Curl
 
         if($log)
             self::addLog($opts, $res, $ch_info);
+
+        if($opts['download'])
+            return fclose($f);
+
         return self::prepareResponse($opts, $res, $ch_info);
     }
 
     static function get(string $url, array $headers=null){
         return self::fetch([
-            'url' => $url,
+            'url'     => $url,
             'headers' => $headers
         ]);
     }
 
     static function post(string $url, $body, array $headers=null){
         return self::fetch([
-            'url' => $url,
+            'url'     => $url,
             'headers' => $headers,
-            'body' => $body,
-            'method' => 'POST'
+            'body'    => $body,
+            'method'  => 'POST'
         ]);
     }
 
     static function put(string $url, $body, array $headers=null){
         return self::fetch([
-            'url' => $url,
+            'url'     => $url,
             'headers' => $headers,
-            'body' => $body,
-            'method' => 'PUT'
+            'body'    => $body,
+            'method'  => 'PUT'
+        ]);
+    }
+
+    static function download(string $url, string $file, array $headers=null): bool{
+        return !!self::fetch([
+            'url'      => $url,
+            'headers'  => $headers,
+            'download' => $file
         ]);
     }
 

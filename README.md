@@ -46,7 +46,10 @@ $opts = [
     'agent' => 'Mim 0.0.1',
 
     // custom timeout. default 10 detik
-    'timeout' => 5
+    'timeout' => 5,
+
+    // download hasil curl ke file
+    'download' => '/tmp/file'
 ];
 
 $result = Curl::fetch($opts);
@@ -67,12 +70,15 @@ string, atau binary.
 1. `referer` Custom header `Referer: `.
 1. `agent` Custom header `User-Agent:`.
 1. `timeout` Set maksimal eksekusi curl. Default 10 detik.
+1. `download` Download hasil curl ke suatu file. Menambahkan property ini akan mengembalikan nilai `bool`.
 
 ### get(string $url, array $headers): mixed
 
 ### post(string $url, $body, array $headers): mixed
 
 ### put(string $url, $body, array $headers): mixed
+
+### download(string $url, string $file, array $headers): bool
 
 ### lastError(): string
 
