@@ -29,9 +29,21 @@ $opts = [
         'Accept' => 'application/json'
     ],
 
+    // POST/PUT body custom
+    'content' => [
+        'key' => [
+            'headers' => [
+                'Content-Type' => 'application/json; charset=UTF-8'
+            ],
+            'content' => json_encode(['name' => $file->path])
+        ],
+        'file' => new \CURLFile($file->path, $file->type, $file->name)
+    ],
+
     // POST/PUT body
     'body' => [
-        'key' => 'value'
+        'key' => 'value',
+        'file' => new \CURLFile($file->path, $file->type, $file->name)
     ],
 
     // tambahan request query string
@@ -64,6 +76,7 @@ Nilai dari parameter `$opts` adalah:
 1. `url`. Absolute URL target CURL
 1. `method`. Request method, nilai yang dikenal sampai saat ini adalah `POST`, `PUT`, `GET`, dan `DELETE`.
 1. `headers`. Array key-value pair header yang akan ditambahkan ke request curl.
+1. `content`. Array key-value pair content body yang akan menggunakan custom renderer body.
 1. `body`. Konten yang dikirim bersamaan dengan request curl. Nilai ini bisa array key-value pair, atau
 string, atau binary.
 1. `query`. Query string yang akan ditambahkan ke request url.
@@ -71,6 +84,13 @@ string, atau binary.
 1. `agent` Custom header `User-Agent:`.
 1. `timeout` Set maksimal eksekusi curl. Default 10 detik.
 1. `download` Download hasil curl ke suatu file. Menambahkan property ini akan mengembalikan nilai `bool`.
+
+Sebagai catanan bahwa nilai `body` dan `content` tidak bisa di set secara bersamaan.
+Gunakan hanya salah satu. Jika property `content` di set, dan nilai header `Content-Type`
+adalah salah satu dari `multipart/related` atau `multipart/form-data`, maka nilai `boundary`
+akan ditambahkan secara otomatis dibagian akhir header. Tapi jika tidak diset, atau nilai header
+`Content-Type` bukan salah satu dari yang disebutkan diatas, maka nilai dari header teresebut
+akan ditindih dan digantikan dengan dengan `multipart/form-data`.
 
 ### get(string $url, array $headers): mixed
 

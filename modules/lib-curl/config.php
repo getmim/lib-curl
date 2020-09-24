@@ -7,7 +7,7 @@
 
 return [
     '__name' => 'lib-curl',
-    '__version' => '0.1.0',
+    '__version' => '0.2.0',
     '__git' => 'git@github.com:getphun/lib-curl.git',
     '__license' => 'MIT',
     '__author' => [

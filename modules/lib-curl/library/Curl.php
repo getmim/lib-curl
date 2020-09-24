@@ -32,6 +32,69 @@ class Curl
         Fs::write($log_path, json_encode($data, JSON_PRETTY_PRINT));
     }
 
+    private static function buildContentBody(array $body, string $delimiter, string $type=''): string{
+        $file_exists = false;
+        foreach($body as $name => $opt){
+            if(!is_a($opt, 'CURLFile'))
+                continue;
+
+            $file_exists = true;
+            break;
+        }
+
+        if(!$file_exists)
+            return http_build_query($body);
+
+        $nl = "\r\n";
+
+        $result = '';
+        foreach($body as $name => $opt){
+            $result.= '--' . $delimiter . $nl;
+            $content = '';
+            $is_file = is_a($opt, 'CURLFile');
+
+            $headers = [];
+            if($type == 'multipart/form-data')
+                $headers['Content-Disposition'] = 'form-data; name"' . $name . '"';
+
+            if($is_file){
+                if($type == 'multipart/form-data')
+                    $headers['Content-Disposition'].= '; filename="' . $opt->getPostFilename() . '"';
+                $headers['Content-Type'] = $opt->getMimeType();
+                $content = file_get_contents($opt->getFilename());
+
+            }else{
+                if(isset($opt['headers'])){
+                    $ctype = $opt['headers']['Content-Type'] ?? '';
+                    $ctype = explode(';', $ctype)[0];
+
+                    if($ctype == 'application/json')
+                        $content = json_encode($opt['content'], JSON_UNESCAPED_SLASHES);
+                    else
+                        $content = urlencode($opt['content']);
+                }else{
+                    $content = urlencode($opt['content']);
+                }
+            }
+
+            if(!$is_file && isset($opt['headers'])){
+                foreach($opt['headers'] as $hname => $hval)
+                    $headers[$hname] = $hval;
+            }
+
+            $final_headers = [];
+            foreach($headers as $hname => $hval)
+                $final_headers[] = $hname . ': ' . $hval;
+
+            $result.= implode($nl, $final_headers);
+            $result.= $nl . $nl . $content . $nl;
+        }
+
+        $result.= '--' . $delimiter . '--' . $nl;
+
+        return $result;
+    }
+
     private static function prepareResponse(array $opts, string $res, array $info){
         self::$last_result_body = $res ? $res : '';
         $content_type = $info['content_type'] ?? 'text/html';
@@ -51,6 +114,7 @@ class Curl
 
 	static function fetch(array $opts){
         $def_opts = [
+            'content'   => [],
             'body'      => [],
             'headers'   => [],
             'method'    => 'GET',
@@ -99,19 +163,39 @@ class Curl
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
 
-        // request body
-        if($opts['body'] && in_array($opts['method'], ['POST', 'PUT'])){
-            $ctype = $opts['headers']['Content-Type'] ?? '';
-            $ctype = explode(';', $ctype)[0];
+        // request body/content
+        if(in_array($opts['method'], ['POST', 'PUT'])){
+            if($opts['body']){
+                $ctype = $opts['headers']['Content-Type'] ?? '';
+                $ctype = explode(';', $ctype)[0];
 
-            $data = $opts['body'];
+                $data = $opts['body'];
 
-            if($ctype == 'application/json'){
-                $data = json_encode($data);
-                $opts['headers']['Content-Length'] = strlen($data);
+                if($ctype == 'application/json'){
+                    $data = json_encode($data);
+                    $opts['headers']['Content-Length'] = strlen($data);
+                }
+
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+
+            }elseif($opts['content']){
+                $delimiter = '-------------' . uniqid();
+
+                // override header content-type
+                $c_type = $opts['headers']['Content-Type'] ?? 'multipart/form-data';
+                $a_type = ['multipart/form-data','multipart/related'];
+
+                if(!in_array($c_type, $a_type))
+                    $c_type = 'multipart/form-data';
+
+                $final_body = self::buildContentBody($opts['content'], $delimiter, $c_type);
+                $opts['headers']['Content-Length'] = strlen($final_body);
+
+                $c_type.= '; boundary=' . $delimiter;
+                $opts['headers']['Content-Type'] = $c_type;
+
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $final_body);
             }
-
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         }
 
         // request headers
